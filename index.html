@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>ARモデル配置シミュレーション (ランダム)</title>
     <style>
-        body { margin: 0; background-color: #00004d; color: white; text-align: center; font-family: sans-serif; }
+        body { margin: 0; background-color: #000033; color: white; text-align: center; font-family: sans-serif; }
         canvas { display: block; }
 
         /* ARセッション開始前のタイトル */
@@ -58,7 +58,7 @@
         let previewMesh = null; // プレビュー（半透明）メッシュ
 
         // モデルの目標高さ (メートル) - 任意の家具に合わせて調整
-        const TARGET_HEIGHT = 1.5; // 例: 棚やスタンドも考慮し1.5mに設定
+        const TARGET_HEIGHT = 0.5; // 例: 棚やスタンドも考慮し1.5mに設定
         
         // ⭐ 新しい関数: ランダムなモデルインデックスを取得
         function getRandomModelIndex() {
@@ -213,18 +213,9 @@
             
             // ⭐ モデル設定を新しいファイルに変更
             modelOptions = [
-                {
-                    name: '本棚',
-                    path: 'bookshelf.glb',
-                },
-                {
-                    name: 'イス',
-                    path: 'chair.glb',
-                },
-                {
-                    name: 'スタンド',
-                    path: 'stand.glb',
-                }
+                { name: '本棚', path: 'bookshelf.glb',},
+                { name: 'イス', path: 'chair.glb',},
+                {name: 'スタンド', path: 'stand.glb',}
             ];
 
             // ARセッション開始時
@@ -439,3 +430,4 @@
     </script>
 </body>
 </html>
+

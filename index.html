@@ -60,7 +60,7 @@
         let previewMesh = null; // プレビュー（半透明）メッシュ
 
         // モデルの目標高さ (メートル) - 任意の家具に合わせて調整
-        const TARGET_HEIGHT = 0.5; // 例: 棚やスタンドも考慮し1.5mに設定
+        const TARGET_HEIGHT = 0.3; // 例: 棚やスタンドも考慮し1.5mに設定
         
         // ⭐ 新しい関数: ランダムなモデルインデックスを取得
         function getRandomModelIndex() {
@@ -217,7 +217,9 @@
             modelOptions = [
                 { name: '本棚', path: 'bookshelf.glb',},
                 { name: 'イス', path: 'chair.glb',},
-                {name: 'スタンド', path: 'stand.glb',}
+                {name: 'スタンド', path: 'stand.glb',},
+                {name: 'koryo-00', path: 'koryo-00.glb',}
+                
             ];
 
             // ARセッション開始時
@@ -432,6 +434,7 @@
     </script>
 </body>
 </html>
+
 
 
 

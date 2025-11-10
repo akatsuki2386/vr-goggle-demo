@@ -18,9 +18,19 @@
             font-size: 24px;
         }
 
-        /* モデル選択UIのスタイル (ARセッション中) */
-        /* ランダム選択になったため、ARセッション中のモデル選択UIは不要だが、
-          現在の選択モデルを表示するために残しておく */
+        /* AR開始前の情報表示 */
+        #pre-ar-info {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+        }
+
+        /* ARセッション中のモデル情報表示 */
         #current-model-info {
             position: absolute;
             top: 10px; 
@@ -35,17 +45,10 @@
             font-size: 18px;
             font-weight: bold;
         }
-
-        /* AR開始前の情報表示 */
-        #pre-ar-info {
-            position: absolute;
-            top: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 5px;
+        
+        /* ARボタンのスタイル (three.jsによって生成されるため、ここでは既存のARButtonを邪魔しないようにする) */
+        #ar-button {
+            z-index: 999; /* 他のUIより下に配置 */
         }
     </style>
 </head>
@@ -101,11 +104,9 @@
         const TARGET_HEIGHT_STAND = 1.0; // スタンドの高さの目安
 
         // モデル選択関数
-        // 今回はランダム選択のため、ARセッション中に明示的に呼び出すことはないが、
-        // ロードとプレビュー設定のために残す
         function selectModel(index) {
-            if (!renderer.xr.isPresenting) return; // ARセッション中でなければ何もしない
-            if (index === selectedModelIndex && previewMesh && modelCache[index]) return; // 同じモデルが既に表示されていればスキップ
+            if (!renderer.xr.isPresenting) return;
+            if (index === selectedModelIndex && previewMesh && modelCache[index]) return;
 
             selectedModelIndex = index;
             console.log(`モデルを切り替えました: ${modelOptions[index].name}`);
@@ -115,7 +116,6 @@
                 scene.remove(previewMesh);
                 previewMesh = null;
             }
-            // 選択中のGLBモデルオブジェクトをクリア
             currentModelObject = null;
 
             // UIの表示を更新
@@ -136,7 +136,6 @@
                 return;
             }
             
-            // ロード中であることをユーザーに通知 (UI要素がないためコンソールログのみ)
             console.log(`モデル '${modelConfig.name}' をロード中です...`);
 
             // GLBモデルを読み込み
@@ -149,11 +148,10 @@
                     const box = new THREE.Box3().setFromObject(loadedModel);
                     const size = box.getSize(new THREE.Vector3());
                     
-                    // モデルの現在の高さ (Y軸のサイズ)
                     const currentHeight = size.y; 
                     
                     // モデルごとに目標の高さを決定
-                    let targetHeight = 1.0; // デフォルト
+                    let targetHeight = 1.0; 
                     if (modelConfig.name === '本棚') targetHeight = TARGET_HEIGHT_BOOKSHELF;
                     else if (modelConfig.name === 'イス') targetHeight = TARGET_HEIGHT_CHAIR;
                     else if (modelConfig.name === 'スタンド') targetHeight = TARGET_HEIGHT_STAND;
@@ -177,7 +175,6 @@
                 },
                 function (xhr) {
                     // ロード進捗
-                    // console.log((xhr.loaded / xhr.total * 100) + '% loaded');
                 },
                 function (error) {
                     console.error('An error happened loading the model:', error);
@@ -188,27 +185,21 @@
 
         // プレビューメッシュを設定する関数
         function setupPreviewMesh(modelObject) {
-            // ARセッション中でなければプレビューは作成しない
             if (!renderer.xr.isPresenting) {
                 return;
             }
 
-            // 既にプレビューメッシュが存在する場合は削除（selectModelから呼ばれた場合）
             if (previewMesh) {
                 scene.remove(previewMesh);
             }
             
             currentModelObject = modelObject;
-            
-            // プレビュー表示のために、モデル全体を透明な半透明マテリアルで包む
-            // GLBモデル全体をラップする透明なObject3Dを作成
             previewMesh = new THREE.Object3D(); 
             previewMesh.add(currentModelObject);
             
             // 半透明の表現
             currentModelObject.traverse((node) => {
                 if (node.isMesh) {
-                    // 既存のマテリアルを半透明化するために新しいマテリアルを作成
                     const originalMaterial = node.material.clone();
                     const previewMaterial = originalMaterial.clone();
                     previewMaterial.transparent = true;
@@ -219,7 +210,6 @@
 
             // ARシーンに追加
             scene.add(previewMesh);
-            // reticleがまだ非表示の場合、previewMeshも非表示にしておく
             if (!reticle.visible && previewMesh) {
                 previewMesh.visible = false;
             }
@@ -253,6 +243,7 @@
             renderer.xr.enabled = true;
             document.body.appendChild(renderer.domElement);
 
+            // AR開始ボタンを生成してbodyに追加
             document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['local', 'hit-test'] }));
             
             modelOptions = [
@@ -272,7 +263,6 @@
 
             // モデルをランダムに初期選択 (ARセッション開始前に決定)
             selectedModelIndex = Math.floor(Math.random() * modelOptions.length);
-            console.log(`初期ランダム選択モデル: ${modelOptions[selectedModelIndex].name} (Index: ${selectedModelIndex})`);
             
             // ARセッション開始時
             renderer.xr.addEventListener('sessionstart', () => {
@@ -333,7 +323,6 @@
 
                 // 次のARセッションのためにモデルをランダムに再選択
                 selectedModelIndex = Math.floor(Math.random() * modelOptions.length);
-                console.log(`次のセッションのランダム選択モデル: ${modelOptions[selectedModelIndex].name} (Index: ${selectedModelIndex})`);
 
                 // シーンをクリアしてまっさらな状態にする
                 reticle.visible = false;
@@ -378,42 +367,35 @@
             const intersects = raycaster.intersectObjects(intersectableObjects, true);
 
             if (intersects.length > 0) {
-                // 交差したオブジェクトがGLBモデルのどの部分であっても、最上位の親オブジェクト（配置したモデル）を見つける
+                // モデルをつかむ処理
                 let intersectedObject = intersects[0].object;
                 while (intersectedObject.parent && intersectableObjects.includes(intersectedObject.parent) === false) {
-                     if (intersectableObjects.includes(intersectedObject)) break; // 既に最上位オブジェクトなら停止
+                     if (intersectableObjects.includes(intersectedObject)) break;
                      intersectedObject = intersectedObject.parent;
                 }
                 
                 if (intersectableObjects.includes(intersectedObject)) {
                     grabbedObject = intersectedObject;
                     grabbingController = controller;
-                    
-                    console.log('モデルをつかみました！', grabbedObject.name || grabbedObject.type);
                 }
-
 
             } else {
                 // モデルの配置
-                // currentModelObject がキャッシュのモデルをコピーしたインスタンス（プレビューの親）であれば配置処理に進む
                 if (reticle.visible && modelCache[selectedModelIndex]) {
                     
-                    // 1. プレビューメッシュ（半透明のObject3Dラッパー）をシーンから削除
+                    // 1. プレビューメッシュをシーンから削除
                     if (previewMesh) {
                         scene.remove(previewMesh);
                         previewMesh = null;
                         currentModelObject = null;
                     }
                     
-                    // 2. キャッシュから新しいインスタンスを作成（最終配置モデル）
+                    // 2. 最終配置モデルの作成
                     const finalModel = modelCache[selectedModelIndex].clone();
                     
-                    // 3. マテリアルを非透明のオリジナルに戻す (キャッシュからコピーした時点で元のマテリアルになっているはずだが念のため)
+                    // 3. マテリアルを非透明に戻す (省略可だが念のため)
                     finalModel.traverse((node) => {
                          if (node.isMesh && node.material.transparent) {
-                                // 新しいマテリアルを作成するか、元のマテリアル（不透明）に戻す処理を実装する必要があるが、
-                                // 今回はキャッシュの.clone()を使用しているため、元の不透明な状態が維持されることを前提とする
-                            // ここでは、念のため不透明設定を適用
                             const originalMaterial = node.material.clone();
                             originalMaterial.transparent = false;
                             originalMaterial.opacity = 1;
@@ -428,11 +410,8 @@
                     scene.add(finalModel);
                     intersectableObjects.push(finalModel);
                     
-                    console.log(`モデルを配置しました: ${finalModel.name}`);
-
                     // 5. 配置後、次のモデルをランダムに選択し、プレビューメッシュの生成を開始
                     if (renderer.xr.isPresenting) {
-                        // 次のモデルをランダムに決定
                         const newRandomIndex = Math.floor(Math.random() * modelOptions.length);
                         selectModel(newRandomIndex);
                     }
@@ -444,7 +423,6 @@
             if (grabbedObject) {
                 grabbedObject = null;
                 grabbingController = null;
-                console.log('モデルを離しました！');
             }
         }
 
@@ -501,7 +479,6 @@
                     const hitTestResults = frame.getHitTestResults(hitTestSource);
 
                     if (hitTestResults.length > 0) {
-                        // ヒットテストの結果を使って、掴んでいるモデルを床面に沿って移動
                         const hit = hitTestResults[0];
                         const referenceSpace = renderer.xr.getReferenceSpace();
                         const newPosition = new THREE.Vector3().setFromMatrixPosition(

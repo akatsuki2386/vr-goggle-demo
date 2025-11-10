@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>ARモデル配置シミュレーション (ランダム)</title>
+    <title>ARモデル配置シミュレーション</title>
     <style>
         body { margin: 0; background-color: #000033; color: white; text-align: center; font-family: sans-serif; }
         canvas { display: block; }
@@ -10,7 +10,9 @@
         /* ARセッション開始前のタイトル */
         #title {
             position: absolute;
-            top: 20px;
+            top: 50%; /* ⭐ 垂直方向の中央配置 */
+            left: 50%; /* ⭐ 水平方向の中央配置 */
+            transform: translate(-50%, -50%); /* ⭐ 自身を基準に中央に移動 */
             width: 100%;
             z-index: 1; 
             margin: 0;
@@ -430,4 +432,5 @@
     </script>
 </body>
 </html>
+
 
